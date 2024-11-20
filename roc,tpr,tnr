@@ -1,0 +1,30 @@
+from sklearn.metrics import roc_curve
+# Calculate ROC curve from y_test and pred
+fpr, tpr, thresholds = roc_curve(np.argmax(test_targets, axis=1)>=1,np.argmax(y_pred, axis=1)>=1)
+
+print('Miss Rate= '+str(100-(accuracydnn*100))+' %')
+mAP=(np.mean(tpr)/(np.mean(tpr))+(np.mean(fpr)))/2
+print('mAP is = '+str(mAP*100)+ ' %')
+# Plot the ROC curve
+fig = plt.figure(figsize=(8,8))
+plt.title('Receiver Operating Characteristic')
+
+# Plot ROC curve
+plt.plot(fpr, tpr, label='l1')
+plt.legend(loc='lower right')
+
+# Diagonal 45 degree line
+plt.plot([0,1],[0,1],'k--')
+
+# Axes limits and labels
+plt.xlim([-0.1,1.1])
+plt.ylim([-0.1,1.1])
+plt.ylabel('True Positive Rate')
+plt.xlabel('False Positive Rate')
+plt.show()
+
+
+
+
+#model.save('color_trained_modelDNN.h5')
+model.save('filr_model.h5')
