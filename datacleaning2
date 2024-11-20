@@ -1,0 +1,85 @@
+import os
+import numpy as np
+from PIL import Image, ImageStat
+import shutil  # For deleting or moving files
+
+# Set your test image directory and image size
+test_path = '/Users/karthikmuniraj/Documents/ITSD/Final_Test/Images/'
+height, width = 32, 32  # Target size for images
+brightness_threshold = 30  # Threshold to detect overly dark images (0-255)
+
+# Initialize lists for data and labels
+data = []
+labels = []
+
+# Get the list of all folders in the test_path
+folders = os.listdir(test_path)
+seen_classes = set()  # To check for repetitive classes
+
+# Loop through each folder (each folder represents a class)
+for label, folder in enumerate(folders):
+    folder_path = os.path.join(test_path, folder)
+    
+    if os.path.isdir(folder_path):
+        # Check for repetitive class names
+        if folder in seen_classes:
+            print(f"Duplicate class detected: {folder}. Skipping...")
+            continue
+        seen_classes.add(folder)
+        
+        # Get all image files in the current folder
+        image_files = [f for f in os.listdir(folder_path) if f.endswith('.png') or f.endswith('.jpg')]
+        
+        for index, image_file in enumerate(image_files):
+            image_path = os.path.join(folder_path, image_file)
+            
+            try:
+                # Open the image
+                image = Image.open(image_path)
+
+                # Ensure the image is in RGB format
+                image = image.convert('RGB')
+
+                # Check if the image is too dark
+                stat = ImageStat.Stat(image)
+                brightness = stat.mean[0]  # Average pixel value
+                if brightness < brightness_threshold:
+                    print(f"Deleting dark image: {image_path} (Brightness: {brightness})")
+                    os.remove(image_path)
+                    continue
+                
+                # Validate image is in the correct folder (optional: if ground truth available)
+                # if not validate_image_label(image_file, folder):  # Implement validate_image_label()
+                #     print(f"Mislabeled image: {image_file}. Moving or skipping...")
+                #     continue
+                
+                # Rename image to proper syntax (e.g., class_label_index.extension)
+                new_name = f"{folder}_{index}.png"
+                new_path = os.path.join(folder_path, new_name)
+                os.rename(image_path, new_path)
+                
+                # Resize the image to the target size
+                image_resized = image.resize((height, width))
+                
+                # Convert to numpy array and normalize
+                image_array = np.array(image_resized) / 255.0
+                
+                # Append to data and labels
+                data.append(image_array)
+                labels.append(label)
+
+            except Exception as e:
+                print(f"Error processing {image_file}: {e}")
+                continue
+
+# Convert the data and labels to numpy arrays
+X_test = np.array(data)
+y_test = np.array(labels)
+
+# Print the final dataset shape
+print("Final Test Data Shape:", X_test.shape)
+print("Final Test Labels Shape:", y_test.shape)
+
+# Optionally save cleaned data for future use
+np.save("X_test_cleaned.npy", X_test)
+np.save("y_test_cleaned.npy", y_test)
