@@ -1,0 +1,60 @@
+import os
+import numpy as np
+from PIL import Image
+import cv2
+
+# Set your test image directory and image size
+test_path = '/Users/karthikmuniraj/Documents/ITSD/Final_Test/Images/'
+height, width = 32, 32  # Example target size, change based on your model's input size
+
+# Initialize lists to hold image data and labels
+data = []
+labels = []
+
+# Get the list of all folders in the test_path (assuming each folder represents a class)
+folders = os.listdir(test_path)
+
+# Loop through each folder (each folder is a class)
+for label, folder in enumerate(folders):
+    folder_path = os.path.join(test_path, folder)
+    
+    if os.path.isdir(folder_path):  # Ensure we are dealing with a folder
+        # Get all image files in the current folder (adjust if needed for file extensions)
+        image_files = [f for f in os.listdir(folder_path) if f.endswith('.png') or f.endswith('.jpg')]
+        
+        # Loop through each image file in the folder
+        for image_file in image_files:
+            image_path = os.path.join(folder_path, image_file)
+
+            try:
+                # Open and load the image
+                image = Image.open(image_path)
+
+                # Ensure the image is in RGB format (discard alpha channel if it exists)
+                image = image.convert('RGB')
+
+                # Resize the image to the target input size
+                image_resized = image.resize((height, width))
+
+                # Convert image to numpy array and normalize pixel values to [0, 1]
+                image_array = np.array(image_resized) / 255.0  # Normalize to range [0, 1]
+                
+                # Append the image data and its corresponding label
+                data.append(image_array)
+                labels.append(label)  # Use the folder index as the label
+
+            except Exception as e:
+                print(f"Error loading {image_file}: {e}")
+
+# Convert the list of images to a numpy array
+X_test = np.array(data)
+y_test = np.array(labels)
+
+# Print the shape of the test data and labels to verify
+print("Test Data Shape:", X_test.shape)
+print("Test Labels Shape:", y_test.shape)
+
+# Optionally, if you have the ground truth labels, use them for evaluation
+# e.g., evaluate the model using: model.evaluate(X_test, y_test)
+
+
